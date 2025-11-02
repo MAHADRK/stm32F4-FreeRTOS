@@ -33,6 +33,12 @@ void StartDefaultTask(void *argument);
 int __io_putchar(int ch);
 
 void vGreenLEDControlTask(void *pvParameters);
+void vBlueLEDControlTask(void *pvParameters);
+void vRedLEDControlTask(void *pvParameters);
+
+typedef uint32_t TaskProfiler;
+
+TaskProfiler GreenLEDTaskProfiler, BlueLEDTaskProfiler, RedLEDTaskProfiler;
 
 
 int main(void)
@@ -41,12 +47,26 @@ int main(void)
   HAL_Init();
   /* Configure the system clock */
   SystemClock_Config();
-  /* Initialize all configured peripherals */
+  /* Initialise all configured peripherals */
   MX_GPIO_Init();
   MX_USART2_UART_Init();
 
   xTaskCreate(vGreenLEDControlTask,
 		      "GreenLEDControlTask",
+			  100,
+			  NULL,
+			  1,
+			  NULL);
+
+  xTaskCreate(vBlueLEDControlTask,
+		      "BlueLEDControlTask",
+			  100,
+			  NULL,
+			  1,
+			  NULL);
+
+  xTaskCreate(vRedLEDControlTask,
+		      "RedLEDControlTask",
 			  100,
 			  NULL,
 			  1,
@@ -65,10 +85,25 @@ void vGreenLEDControlTask(void *pvParameters)
 {
 	while(1)
 	{
-		printf("Green LED task is running.... \n\r");
+		GreenLEDTaskProfiler++;
 	}
 }
 
+void vBlueLEDControlTask(void *pvParameters)
+{
+	while(1)
+	{
+		BlueLEDTaskProfiler++;
+	}
+}
+
+void vRedLEDControlTask(void *pvParameters)
+{
+	while(1)
+	{
+		RedLEDTaskProfiler++;
+	}
+}
 
 int __io_putchar(int ch)
 {
