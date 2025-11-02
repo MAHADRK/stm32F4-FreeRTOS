@@ -41,6 +41,9 @@
 *.su
 *.idb
 *.pdb
+*.mk
+*.list
+*.Launch
 
 # Kernel Module Compile Results
 *.mod*
@@ -53,3 +56,18 @@ dkms.conf
 
 # debug information files
 *.dwo
+
+# STM32CubeIDE workspace metadata
+.metadata/
+
+# Build artifacts
+Debug/
+Release/
+*.log
+*.d
+*.bin
+*.hex
+
+# IDE auto-generated files
+*.launch
+*.settings/

@@ -32,27 +32,19 @@ void StartDefaultTask(void *argument);
 
 int __io_putchar(int ch);
 
-void vGreenLEDControlTask(void *pvParameters);
-
-
 int main(void)
 {
 
   HAL_Init();
+
+
   /* Configure the system clock */
   SystemClock_Config();
+
+
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART2_UART_Init();
-
-  xTaskCreate(vGreenLEDControlTask,
-		      "GreenLEDControlTask",
-			  100,
-			  NULL,
-			  1,
-			  NULL);
-
-  vTaskStartScheduler();
 
   while (1)
   {
@@ -61,13 +53,7 @@ int main(void)
 }
 
 
-void vGreenLEDControlTask(void *pvParameters)
-{
-	while(1)
-	{
-		printf("Green LED task is running.... \n\r");
-	}
-}
+
 
 
 int __io_putchar(int ch)

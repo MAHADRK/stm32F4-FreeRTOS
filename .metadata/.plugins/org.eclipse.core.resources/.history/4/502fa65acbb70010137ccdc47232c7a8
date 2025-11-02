@@ -52,8 +52,6 @@ int main(void)
 			  1,
 			  NULL);
 
-  vTaskStartScheduler();
-
   while (1)
   {
 	 printf("Bismillah \n\r");
