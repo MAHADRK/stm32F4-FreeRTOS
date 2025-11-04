@@ -22,6 +22,12 @@
 #include <stdio.h>
 #include "stdint.h"
 
+#define GreenLED 	GPIO_PIN_5
+#define BlueLED 	GPIO_PIN_6
+#define RedLED 		GPIO_PIN_7
+#define OrangeLED 	GPIO_PIN_8
+
+
 UART_HandleTypeDef huart2;
 
 /* Private function prototypes -----------------------------------------------*/
@@ -35,10 +41,11 @@ int __io_putchar(int ch);
 void vGreenLEDControlTask(void *pvParameters);
 void vBlueLEDControlTask(void *pvParameters);
 void vRedLEDControlTask(void *pvParameters);
+void vOrangeLEDControlTask(void *pvParameters);
 
 typedef uint32_t TaskProfiler;
 
-TaskProfiler GreenLEDTaskProfiler, BlueLEDTaskProfiler, RedLEDTaskProfiler;
+TaskProfiler GreenLEDTaskProfiler, BlueLEDTaskProfiler, RedLEDTaskProfiler, OrangeLEDTaskProfiler;
 
 
 int main(void)
@@ -62,11 +69,17 @@ int main(void)
 		      "BlueLEDControlTask",
 			  100,
 			  NULL,
-			  1,
+		  	  1,
 			  NULL);
 
   xTaskCreate(vRedLEDControlTask,
 		      "RedLEDControlTask",
+			  100,
+			  NULL,
+			  1,
+			  NULL);
+  xTaskCreate(vOrangeLEDControlTask,
+		      "OrangeLEDControlTask",
 			  100,
 			  NULL,
 			  1,
@@ -85,7 +98,8 @@ void vGreenLEDControlTask(void *pvParameters)
 {
 	while(1)
 	{
-		GreenLEDTaskProfiler++;
+		//GreenLEDTaskProfiler++;
+		HAL_GPIO_TogglePin(GPIOA, GreenLED);
 	}
 }
 
@@ -93,7 +107,8 @@ void vBlueLEDControlTask(void *pvParameters)
 {
 	while(1)
 	{
-		BlueLEDTaskProfiler++;
+		//BlueLEDTaskProfiler++;
+		HAL_GPIO_TogglePin(GPIOA, BlueLED);
 	}
 }
 
@@ -101,9 +116,20 @@ void vRedLEDControlTask(void *pvParameters)
 {
 	while(1)
 	{
-		RedLEDTaskProfiler++;
+		//RedLEDTaskProfiler++;
+		HAL_GPIO_TogglePin(GPIOA, RedLED);
 	}
 }
+
+void vOrangeLEDControlTask(void *pvParameters)
+{
+	while(1)
+	{
+		//OrangeLEDTaskProfiler++;
+		HAL_GPIO_TogglePin(GPIOA, OrangeLED);
+	}
+}
+
 
 int __io_putchar(int ch)
 {
@@ -189,8 +215,23 @@ static void MX_USART2_UART_Init(void)
 static void MX_GPIO_Init(void)
 {
 
+  GPIO_InitTypeDef GPIO_InitStruct;
+
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOA_CLK_ENABLE();
+
+  /* GPIO pins reset */
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8, GPIO_PIN_RESET);
+
+  /* Configuration structure */
+  GPIO_InitStruct.Pin = GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+
+  /* GPIOA Initialisation */
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
 
 }
 
