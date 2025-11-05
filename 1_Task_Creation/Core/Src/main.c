@@ -38,10 +38,11 @@ void vRedLEDControlTask(void *pvParameters);
 
 typedef uint32_t TaskProfiler;
 
-TaskProfiler GreenLEDTaskProfiler, BlueLEDTaskProfiler = 5, RedLEDTaskProfiler;
+TaskProfiler GreenLEDTaskProfiler, BlueLEDTaskProfiler, RedLEDTaskProfiler;
 TaskHandle_t GreenLED_Handle,  BlueLED_Handle, RedLED_Handle;
 
 uint16_t Green_PriorityGet;
+uint16_t Suspender_Monitor;
 
 int main(void)
 {
@@ -57,14 +58,14 @@ int main(void)
 		      "GreenLEDControlTask",
 			  100,
 			  NULL,
-			  2,
+			  1,
 			  &GreenLED_Handle);
 
   xTaskCreate(vBlueLEDControlTask,
 		      "BlueLEDControlTask",
 			  100,
 			  NULL,
-			  2,
+			  1,
 			  &BlueLED_Handle);
 
   xTaskCreate(vRedLEDControlTask,
@@ -88,6 +89,7 @@ void vGreenLEDControlTask(void *pvParameters)
 	while(1)
 	{
 		GreenLEDTaskProfiler++;
+		for(int i=0; i<=600000; i++){}
 	}
 }
 
@@ -102,12 +104,6 @@ void vBlueLEDControlTask(void *pvParameters)
 		   will keep increment in GreenLED profiler*/
 		for(int i=0; i<=600000; i++){}
 
-		//vTaskPrioritySet(RedLED_Handle, 3);
-
-		/* will change its own priority*/
-		vTaskPrioritySet(NULL, 3);
-
-		Green_PriorityGet = uxTaskPriorityGet(GreenLED_Handle);
 	}
 }
 
@@ -116,6 +112,14 @@ void vRedLEDControlTask(void *pvParameters)
 	while(1)
 	{
 		RedLEDTaskProfiler++;
+		for(int i=0; i<=600000; i++){}
+		Suspender_Monitor++;
+
+		if (Suspender_Monitor >= 15)
+		{
+			vTaskSuspend(BlueLED_Handle);
+		}
+
 	}
 }
 
