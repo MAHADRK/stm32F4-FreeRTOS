@@ -41,6 +41,7 @@ typedef uint32_t TaskProfiler;
 TaskProfiler GreenLEDTaskProfiler, BlueLEDTaskProfiler = 5, RedLEDTaskProfiler;
 TaskHandle_t GreenLED_Handle,  BlueLED_Handle, RedLED_Handle;
 
+uint16_t Green_PriorityGet;
 
 int main(void)
 {
@@ -101,10 +102,12 @@ void vBlueLEDControlTask(void *pvParameters)
 		   will keep increment in GreenLED profiler*/
 		for(int i=0; i<=600000; i++){}
 
-		vTaskPrioritySet(RedLED_Handle, 3);
+		//vTaskPrioritySet(RedLED_Handle, 3);
 
 		/* will change its own priority*/
 		vTaskPrioritySet(NULL, 3);
+
+		Green_PriorityGet = uxTaskPriorityGet(GreenLED_Handle);
 	}
 }
 
