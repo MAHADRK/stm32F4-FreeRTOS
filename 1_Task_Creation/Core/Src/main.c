@@ -22,17 +22,6 @@
 #include <stdio.h>
 #include "stdint.h"
 
-
-#define Green	GPIO_PIN_5
-#define Blue 	GPIO_PIN_6
-#define Red		GPIO_PIN_7
-#define Orange 	GPIO_PIN_8
-
-const uint16_t  *GreenLED = (uint16_t *)Green;
-const uint16_t  *BlueLED = (uint16_t *)Blue;
-const uint16_t  *RedLED = (uint16_t *)Red;
-const uint16_t  *OrangeLED = (uint16_t *)Orange;
-
 UART_HandleTypeDef huart2;
 
 /* Private function prototypes -----------------------------------------------*/
@@ -43,11 +32,14 @@ void StartDefaultTask(void *argument);
 
 int __io_putchar(int ch);
 
-void vLEDControlTask(void *pvParameters);
+void vGreenLEDControlTask(void *pvParameters);
+void vBlueLEDControlTask(void *pvParameters);
+void vRedLEDControlTask(void *pvParameters);
 
 typedef uint32_t TaskProfiler;
 
-TaskProfiler GreenLEDTaskProfiler, BlueLEDTaskProfiler, RedLEDTaskProfiler, OrangeLEDTaskProfiler;
+TaskProfiler GreenLEDTaskProfiler, BlueLEDTaskProfiler = 5, RedLEDTaskProfiler;
+TaskHandle_t GreenLED_Handle,  BlueLED_Handle, RedLED_Handle;
 
 
 int main(void)
@@ -60,32 +52,26 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
 
-  xTaskCreate(vLEDControlTask,
+  xTaskCreate(vGreenLEDControlTask,
 		      "GreenLEDControlTask",
 			  100,
-			  (void *)GreenLED,
-			  1,
-			  NULL);
+			  NULL,
+			  2,
+			  &GreenLED_Handle);
 
-  xTaskCreate(vLEDControlTask,
+  xTaskCreate(vBlueLEDControlTask,
 		      "BlueLEDControlTask",
 			  100,
-			  (void *)BlueLED,
-		  	  1,
-			  NULL);
+			  NULL,
+			  2,
+			  &BlueLED_Handle);
 
-  xTaskCreate(vLEDControlTask,
+  xTaskCreate(vRedLEDControlTask,
 		      "RedLEDControlTask",
 			  100,
-			  (void *)RedLED,
+			  NULL,
 			  1,
-			  NULL);
-  xTaskCreate(vLEDControlTask,
-		      "OrangeLEDControlTask",
-			  100,
-			  (void *)OrangeLED,
-			  1,
-			  NULL);
+			  &RedLED_Handle);
 
   vTaskStartScheduler();
 
@@ -96,16 +82,39 @@ int main(void)
 }
 
 
-void vLEDControlTask(void *pvParameters)
+void vGreenLEDControlTask(void *pvParameters)
 {
 	while(1)
 	{
-		//GreenLEDTaskProfiler++;
-		HAL_GPIO_TogglePin(GPIOA, (uint16_t)pvParameters);
-		for(int i=0; i<60000; i++){}
+		GreenLEDTaskProfiler++;
 	}
 }
 
+void vBlueLEDControlTask(void *pvParameters)
+{
+
+	while(1)
+	{
+		BlueLEDTaskProfiler++;
+
+		/* will keep counting and round robin fashion
+		   will keep increment in GreenLED profiler*/
+		for(int i=0; i<=600000; i++){}
+
+		vTaskPrioritySet(RedLED_Handle, 3);
+
+		/* will change its own priority*/
+		vTaskPrioritySet(NULL, 3);
+	}
+}
+
+void vRedLEDControlTask(void *pvParameters)
+{
+	while(1)
+	{
+		RedLEDTaskProfiler++;
+	}
+}
 
 int __io_putchar(int ch)
 {
@@ -191,23 +200,8 @@ static void MX_USART2_UART_Init(void)
 static void MX_GPIO_Init(void)
 {
 
-  GPIO_InitTypeDef GPIO_InitStruct;
-
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOA_CLK_ENABLE();
-
-  /* GPIO pins reset */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8, GPIO_PIN_RESET);
-
-  /* Configuration structure */
-  GPIO_InitStruct.Pin = GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-
-  /* GPIOA Initialisation */
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
 
 }
 
