@@ -35,11 +35,12 @@ int __io_putchar(int ch);
 void vGreenLEDControlTask(void *pvParameters);
 void vBlueLEDControlTask(void *pvParameters);
 void vRedLEDControlTask(void *pvParameters);
+void vApplicationIdleHook(void);
 
 typedef uint32_t TaskProfiler;
 
-TaskProfiler GreenLEDTaskProfiler, BlueLEDTaskProfiler, RedLEDTaskProfiler;
-
+TaskProfiler GreenLEDTaskProfiler, BlueLEDTaskProfiler, RedLEDTaskProfiler, IdleTaskProfiler;
+TickType_t _500ms = pdMS_TO_TICKS(500);
 
 
 int main(void)
@@ -84,17 +85,10 @@ int main(void)
 
 void vGreenLEDControlTask(void *pvParameters)
 {
-	TickType_t xLastWakeTime;
-
-	const TickType_t xPeriod = pdMS_TO_TICKS(500);
-
-	// Initialise the xLastWakeTime variable with the current time.
-	xLastWakeTime = xTaskGetTickCount();
-
 	while(1)
 	{
 		GreenLEDTaskProfiler++;
-		vTaskDelayUntil( &xLastWakeTime, xPeriod );
+		vTaskDelay(_500ms);
 	}
 }
 
@@ -103,6 +97,7 @@ void vBlueLEDControlTask(void *pvParameters)
 	while(1)
 	{
 		BlueLEDTaskProfiler++;
+		vTaskDelay(_500ms);
 	}
 }
 
@@ -111,7 +106,14 @@ void vRedLEDControlTask(void *pvParameters)
 	while(1)
 	{
 		RedLEDTaskProfiler++;
+		vTaskDelay(_500ms);
 	}
+}
+
+
+void vApplicationIdleHook(void)
+{
+	IdleTaskProfiler++;
 }
 
 int __io_putchar(int ch)
