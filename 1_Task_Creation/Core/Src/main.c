@@ -43,6 +43,7 @@ TaskHandle_t GreenLED_Handle,  BlueLED_Handle, RedLED_Handle;
 
 uint16_t Green_PriorityGet;
 uint16_t Suspender_Monitor;
+uint16_t Resume_Monitor;
 
 int main(void)
 {
@@ -104,6 +105,14 @@ void vBlueLEDControlTask(void *pvParameters)
 		   will keep increment in GreenLED profiler*/
 		for(int i=0; i<=600000; i++){}
 
+		Suspender_Monitor++;
+
+		if (Suspender_Monitor == 10)
+		{
+			vTaskSuspend(GreenLED_Handle);
+			Resume_Monitor = 0;
+		}
+
 	}
 }
 
@@ -113,11 +122,13 @@ void vRedLEDControlTask(void *pvParameters)
 	{
 		RedLEDTaskProfiler++;
 		for(int i=0; i<=600000; i++){}
-		Suspender_Monitor++;
 
-		if (Suspender_Monitor >= 15)
+		Resume_Monitor++;
+
+		if (Resume_Monitor == 10)
 		{
-			vTaskSuspend(BlueLED_Handle);
+			vTaskResume(GreenLED_Handle);
+			Suspender_Monitor = 0;
 		}
 
 	}
