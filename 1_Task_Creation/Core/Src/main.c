@@ -21,6 +21,7 @@
 #include "cmsis_os.h"
 #include <stdio.h>
 #include "stdint.h"
+#include "stdbool.h"
 
 UART_HandleTypeDef huart2;
 
@@ -42,8 +43,10 @@ TaskProfiler GreenLEDTaskProfiler, BlueLEDTaskProfiler, RedLEDTaskProfiler;
 TaskHandle_t GreenLED_Handle,  BlueLED_Handle, RedLED_Handle;
 
 uint16_t Green_PriorityGet;
-uint16_t Suspender_Monitor;
+
+uint16_t Execution_Monitor;
 uint16_t Resume_Monitor;
+bool is_killed = false;
 
 int main(void)
 {
@@ -105,12 +108,14 @@ void vBlueLEDControlTask(void *pvParameters)
 		   will keep increment in GreenLED profiler*/
 		for(int i=0; i<=600000; i++){}
 
-		Suspender_Monitor++;
+		Execution_Monitor++;
 
-		if (Suspender_Monitor == 10)
+		if (Execution_Monitor == 10)
 		{
-			vTaskSuspend(GreenLED_Handle);
 			Resume_Monitor = 0;
+			is_killed = true;
+			vTaskDelete(NULL);
+
 		}
 
 	}
@@ -123,14 +128,15 @@ void vRedLEDControlTask(void *pvParameters)
 		RedLEDTaskProfiler++;
 		for(int i=0; i<=600000; i++){}
 
-		Resume_Monitor++;
-
-		if (Resume_Monitor == 10)
+		if (is_killed == true)
 		{
-			vTaskResume(GreenLED_Handle);
-			Suspender_Monitor = 0;
-		}
+			Resume_Monitor++;
 
+			if (Resume_Monitor >= 10)
+			{
+				vTaskResume(BlueLED_Handle);
+			}
+		}
 	}
 }
 
