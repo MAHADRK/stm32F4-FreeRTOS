@@ -21,7 +21,6 @@
 #include "cmsis_os.h"
 #include <stdio.h>
 #include "stdint.h"
-#include "stdbool.h"
 
 UART_HandleTypeDef huart2;
 
@@ -40,13 +39,8 @@ void vRedLEDControlTask(void *pvParameters);
 typedef uint32_t TaskProfiler;
 
 TaskProfiler GreenLEDTaskProfiler, BlueLEDTaskProfiler, RedLEDTaskProfiler;
-TaskHandle_t GreenLED_Handle,  BlueLED_Handle, RedLED_Handle;
 
-uint16_t Green_PriorityGet;
 
-uint16_t Execution_Monitor;
-uint16_t Resume_Monitor;
-bool is_killed = false;
 
 int main(void)
 {
@@ -63,21 +57,21 @@ int main(void)
 			  100,
 			  NULL,
 			  1,
-			  &GreenLED_Handle);
+			  NULL);
 
   xTaskCreate(vBlueLEDControlTask,
 		      "BlueLEDControlTask",
 			  100,
 			  NULL,
 			  1,
-			  &BlueLED_Handle);
+			  NULL);
 
   xTaskCreate(vRedLEDControlTask,
 		      "RedLEDControlTask",
 			  100,
 			  NULL,
 			  1,
-			  &RedLED_Handle);
+			  NULL);
 
   vTaskStartScheduler();
 
@@ -90,34 +84,25 @@ int main(void)
 
 void vGreenLEDControlTask(void *pvParameters)
 {
+	TickType_t xLastWakeTime;
+
+	const TickType_t xPeriod = pdMS_TO_TICKS(500);
+
+	// Initialise the xLastWakeTime variable with the current time.
+	xLastWakeTime = xTaskGetTickCount();
+
 	while(1)
 	{
 		GreenLEDTaskProfiler++;
-		for(int i=0; i<=600000; i++){}
+		vTaskDelayUntil( &xLastWakeTime, xPeriod );
 	}
 }
 
 void vBlueLEDControlTask(void *pvParameters)
 {
-
 	while(1)
 	{
 		BlueLEDTaskProfiler++;
-
-		/* will keep counting and round robin fashion
-		   will keep increment in GreenLED profiler*/
-		for(int i=0; i<=600000; i++){}
-
-		Execution_Monitor++;
-
-		if (Execution_Monitor == 10)
-		{
-			Resume_Monitor = 0;
-			is_killed = true;
-			vTaskDelete(NULL);
-
-		}
-
 	}
 }
 
@@ -126,17 +111,6 @@ void vRedLEDControlTask(void *pvParameters)
 	while(1)
 	{
 		RedLEDTaskProfiler++;
-		for(int i=0; i<=600000; i++){}
-
-		if (is_killed == true)
-		{
-			Resume_Monitor++;
-
-			if (Resume_Monitor >= 10)
-			{
-				vTaskResume(BlueLED_Handle);
-			}
-		}
 	}
 }
 
