@@ -33,7 +33,8 @@ void StartDefaultTask(void *argument);
 int uart2_write(int ch);
 int __io_putchar(int ch);
 
-void SenderTask(void *pvParameters);
+void SenderTask1(void *pvParameters);
+void SenderTask2(void *pvParameters);
 void ReceiverTask(void *pvParameters);
 
 TaskHandle_t SendTask, ReceiveTask;
@@ -50,20 +51,28 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
 
-  yearQueue = xQueueCreate(5, sizeof(int32_t));
+  /* commenting delay in the tasks make the data rate faster*/
+  /* Reason we need greater heap size*/
+  yearQueue = xQueueCreate(20, sizeof(int32_t));
 
-  xTaskCreate(SenderTask,
+  xTaskCreate(SenderTask1,
 		      "Sender Task",
 			  100,
 			  NULL,
 			  1,
 			  NULL);
+  xTaskCreate(SenderTask2,
+ 		      "Sender Task",
+ 			  100,
+ 			  NULL,
+ 			  1,
+ 			  NULL);
 
   xTaskCreate(ReceiverTask,
 		      "Receiver Task",
 			  100,
 			  NULL,
-			  1,
+			  2,
 			  NULL);
 
 
@@ -76,7 +85,7 @@ int main(void)
 }
 
 
-void SenderTask(void *pvParameters)
+void SenderTask1(void *pvParameters)
 {
 	int32_t value_to_Send = 2050;
 	BaseType_t qStatus;
@@ -89,11 +98,28 @@ void SenderTask(void *pvParameters)
 		{
 			printf("Queue Send Error has occurred! \n\r");
 		}
-		vTaskDelay(pdMS_TO_TICKS(100));
+		//vTaskDelay(pdMS_TO_TICKS(100));
 
 	}
 }
 
+void SenderTask2(void *pvParameters)
+{
+	int32_t value_to_Send = 5500;
+	BaseType_t qStatus;
+
+	while(1)
+	{
+		qStatus = xQueueSend(yearQueue,&value_to_Send,0);
+
+		if (qStatus != pdPASS)
+		{
+			printf("Queue Send Error has occurred! \n\r");
+		}
+		//vTaskDelay(pdMS_TO_TICKS(100));
+
+	}
+}
 void ReceiverTask(void *pvParameters)
 {
 	int32_t value_Received;
