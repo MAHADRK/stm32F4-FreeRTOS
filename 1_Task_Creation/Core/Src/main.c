@@ -30,18 +30,15 @@ static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 void StartDefaultTask(void *argument);
 
+int uart2_write(int ch);
 int __io_putchar(int ch);
 
-void vGreenLEDControlTask(void *pvParameters);
-void vBlueLEDControlTask(void *pvParameters);
-void vRedLEDControlTask(void *pvParameters);
-void vApplicationIdleHook(void);
+void SenderTask(void *pvParameters);
+void ReceiverTask(void *pvParameters);
 
-typedef uint32_t TaskProfiler;
+TaskHandle_t SendTask, ReceiveTask;
 
-TaskProfiler GreenLEDTaskProfiler, BlueLEDTaskProfiler, RedLEDTaskProfiler, IdleTaskProfiler;
-TickType_t _500ms = pdMS_TO_TICKS(500);
-
+QueueHandle_t yearQueue;
 
 int main(void)
 {
@@ -53,26 +50,22 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
 
-  xTaskCreate(vGreenLEDControlTask,
-		      "GreenLEDControlTask",
+  yearQueue = xQueueCreate(5, sizeof(int32_t));
+
+  xTaskCreate(SenderTask,
+		      "Sender Task",
 			  100,
 			  NULL,
 			  1,
 			  NULL);
 
-  xTaskCreate(vBlueLEDControlTask,
-		      "BlueLEDControlTask",
+  xTaskCreate(ReceiverTask,
+		      "Receiver Task",
 			  100,
 			  NULL,
 			  1,
 			  NULL);
 
-  xTaskCreate(vRedLEDControlTask,
-		      "RedLEDControlTask",
-			  100,
-			  NULL,
-			  1,
-			  NULL);
 
   vTaskStartScheduler();
 
@@ -83,42 +76,54 @@ int main(void)
 }
 
 
-void vGreenLEDControlTask(void *pvParameters)
+void SenderTask(void *pvParameters)
 {
+	int32_t value_to_Send = 2050;
+	BaseType_t qStatus;
+
 	while(1)
 	{
-		GreenLEDTaskProfiler++;
-		vTaskDelay(_500ms);
+		qStatus = xQueueSend(yearQueue,&value_to_Send,0);
+
+		if (qStatus != pdPASS)
+		{
+			printf("Queue Send Error has occurred! \n\r");
+		}
+		vTaskDelay(pdMS_TO_TICKS(100));
+
 	}
 }
 
-void vBlueLEDControlTask(void *pvParameters)
+void ReceiverTask(void *pvParameters)
 {
+	int32_t value_Received;
+	BaseType_t qStatus;
+	const TickType_t waiting_time = pdMS_TO_TICKS(100);
+
 	while(1)
 	{
-		BlueLEDTaskProfiler++;
-		vTaskDelay(_500ms);
+		qStatus = xQueueReceive(yearQueue,&value_Received,waiting_time);
+		if (qStatus  == pdPASS)
+		{
+			printf("The value Received is %ld!...... \n\r", value_Received);
+		}
+		else
+		{
+			printf("Error: could not receive...\n\r");
+		}
 	}
 }
 
-void vRedLEDControlTask(void *pvParameters)
+int uart2_write(int ch)
 {
-	while(1)
-	{
-		RedLEDTaskProfiler++;
-		vTaskDelay(_500ms);
-	}
-}
-
-
-void vApplicationIdleHook(void)
-{
-	IdleTaskProfiler++;
+	while(!(USART2->SR & 0x0080)){}
+	USART2->DR = (ch & 0xFF);
+	return ch;
 }
 
 int __io_putchar(int ch)
 {
-	HAL_UART_Transmit(&huart2, (uint8_t *)&ch, 1, 0xFFFF);
+	uart2_write(ch);
 	return ch;
 }
 
@@ -132,7 +137,7 @@ void SystemClock_Config(void)
   __HAL_RCC_PWR_CLK_ENABLE();
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE3);
 
-  /** Initializes the RCC Oscillators according to the specified parameters
+  /** Initialises the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
@@ -144,7 +149,7 @@ void SystemClock_Config(void)
     Error_Handler();
   }
 
-  /** Initializes the CPU, AHB and APB buses clocks
+  /** Initialises the CPU, AHB and APB buses clocks
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
