@@ -33,13 +33,28 @@ void StartDefaultTask(void *argument);
 int uart2_write(int ch);
 int __io_putchar(int ch);
 
-void SenderTask1(void *pvParameters);
-void SenderTask2(void *pvParameters);
-void ReceiverTask(void *pvParameters);
+void SenderTask(void *pvParameters);
+void ReceiveTask(void *pvParameters);
 
-TaskHandle_t SendTask, ReceiveTask;
+typedef enum
+{
+	temp_sensor,
+	humidity_sensor
+}Source_data_t;
 
-QueueHandle_t yearQueue;
+typedef struct
+{
+	uint8_t ucValue;
+	Source_data_t sSource;
+}Measurements_t;
+
+static const Measurements_t xStructsToSend[2] =
+{
+		{77, temp_sensor},
+		{67, humidity_sensor}
+};
+
+QueueHandle_t MeasurmentsQueue;
 
 int main(void)
 {
@@ -51,31 +66,28 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
 
-  /* commenting delay in the tasks make the data rate faster*/
-  /* Reason we need greater heap size*/
-  yearQueue = xQueueCreate(20, sizeof(int32_t));
+  MeasurmentsQueue = xQueueCreate(5, sizeof(Measurements_t));
 
-  xTaskCreate(SenderTask1,
-		      "Sender Task",
-			  100,
-			  NULL,
-			  1,
-			  NULL);
-  xTaskCreate(SenderTask2,
- 		      "Sender Task",
- 			  100,
- 			  NULL,
- 			  1,
- 			  NULL);
+  xTaskCreate(ReceiveTask,
+		  "Receive data",
+		  110,
+		  NULL,
+		  1,
+		  NULL);
+  /* passed the address because of structure */
+  xTaskCreate(SenderTask,
+  		  "Temp Sensor",
+  		  100,
+		  (void * )&(xStructsToSend[0]),
+  		  2,
+  		  NULL);
 
-  xTaskCreate(ReceiverTask,
-		      "Receiver Task",
-			  100,
-			  NULL,
-			  2,
-			  NULL);
-
-
+  xTaskCreate(SenderTask,
+   		  "Humidity Sensor",
+   		  100,
+ 		  (void * )&(xStructsToSend[1]),
+   		  2,
+   		  NULL);
   vTaskStartScheduler();
 
   while (1)
@@ -84,59 +96,56 @@ int main(void)
   }
 }
 
-
-void SenderTask1(void *pvParameters)
+void SenderTask(void *pvParameters)
 {
-	int32_t value_to_Send = 2050;
 	BaseType_t qStatus;
+	const TickType_t waiting_time = pdMS_TO_TICKS(200);
 
 	while(1)
 	{
-		qStatus = xQueueSend(yearQueue,&value_to_Send,0);
+		/* Enter block state for 200ms for space to become available in the queue each time the queue is full*/
+		qStatus = xQueueSend(MeasurmentsQueue,pvParameters,waiting_time);
 
 		if (qStatus != pdPASS)
 		{
 			printf("Queue Send Error has occurred! \n\r");
 		}
-		//vTaskDelay(pdMS_TO_TICKS(100));
 
+		//for(int i=0; i<800000;i++){}
 	}
 }
 
-void SenderTask2(void *pvParameters)
+
+void ReceiveTask(void *pvParameters)
 {
-	int32_t value_to_Send = 5500;
+	Measurements_t xReceivedStructure;
 	BaseType_t qStatus;
 
 	while(1)
 	{
-		qStatus = xQueueSend(yearQueue,&value_to_Send,0);
-
-		if (qStatus != pdPASS)
+		/* xReceivedStructure is an internal var so we need to pass its address as required */
+		qStatus = xQueueReceive(MeasurmentsQueue,&xReceivedStructure,0);
+		if(qStatus  == pdPASS)
 		{
-			printf("Queue Send Error has occurred! \n\r");
-		}
-		//vTaskDelay(pdMS_TO_TICKS(100));
+			if(xReceivedStructure.sSource == temp_sensor)
+			{
+				printf("Temperature sensor : %d!\n\r",xReceivedStructure.ucValue);
+			}
 
-	}
-}
-void ReceiverTask(void *pvParameters)
-{
-	int32_t value_Received;
-	BaseType_t qStatus;
-	const TickType_t waiting_time = pdMS_TO_TICKS(100);
-
-	while(1)
-	{
-		qStatus = xQueueReceive(yearQueue,&value_Received,waiting_time);
-		if (qStatus  == pdPASS)
-		{
-			printf("The value Received is %ld!...... \n\r", value_Received);
+			else
+			{
+				printf("Humidity sensor :    %d!\n\r",xReceivedStructure.ucValue);
+			}
 		}
+
 		else
 		{
 			printf("Error: could not receive...\n\r");
 		}
+		UBaseType_t freeStack = uxTaskGetStackHighWaterMark(NULL);
+
+		// Convert to bytes (Cortex-M: 4 bytes per word)
+		printf("Task free stack: %lu bytes\n\r", freeStack * sizeof(StackType_t));
 	}
 }
 
