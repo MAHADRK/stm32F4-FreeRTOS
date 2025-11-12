@@ -30,65 +30,21 @@ static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 void StartDefaultTask(void *argument);
 
-int uart2_write(int ch);
 int __io_putchar(int ch);
-
-void SenderTask(void *pvParameters);
-void ReceiveTask(void *pvParameters);
-
-typedef enum
-{
-	temp_sensor,
-	humidity_sensor
-}Source_data_t;
-
-typedef struct
-{
-	uint8_t ucValue;
-	Source_data_t sSource;
-}Measurements_t;
-
-static const Measurements_t xStructsToSend[2] =
-{
-		{77, temp_sensor},
-		{67, humidity_sensor}
-};
-
-QueueHandle_t MeasurmentsQueue;
 
 int main(void)
 {
 
   HAL_Init();
+
+
   /* Configure the system clock */
   SystemClock_Config();
-  /* Initialise all configured peripherals */
+
+
+  /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART2_UART_Init();
-
-  MeasurmentsQueue = xQueueCreate(5, sizeof(Measurements_t));
-
-  xTaskCreate(ReceiveTask,
-		  "Receive data",
-		  110,
-		  NULL,
-		  1,
-		  NULL);
-  /* passed the address because of structure */
-  xTaskCreate(SenderTask,
-  		  "Temp Sensor",
-  		  100,
-		  (void * )&(xStructsToSend[0]),
-  		  2,
-  		  NULL);
-
-  xTaskCreate(SenderTask,
-   		  "Humidity Sensor",
-   		  100,
- 		  (void * )&(xStructsToSend[1]),
-   		  2,
-   		  NULL);
-  vTaskStartScheduler();
 
   while (1)
   {
@@ -96,69 +52,13 @@ int main(void)
   }
 }
 
-void SenderTask(void *pvParameters)
-{
-	BaseType_t qStatus;
-	const TickType_t waiting_time = pdMS_TO_TICKS(200);
-
-	while(1)
-	{
-		/* Enter block state for 200ms for space to become available in the queue each time the queue is full*/
-		qStatus = xQueueSend(MeasurmentsQueue,pvParameters,waiting_time);
-
-		if (qStatus != pdPASS)
-		{
-			printf("Queue Send Error has occurred! \n\r");
-		}
-
-		//for(int i=0; i<800000;i++){}
-	}
-}
 
 
-void ReceiveTask(void *pvParameters)
-{
-	Measurements_t xReceivedStructure;
-	BaseType_t qStatus;
 
-	while(1)
-	{
-		/* xReceivedStructure is an internal var so we need to pass its address as required */
-		qStatus = xQueueReceive(MeasurmentsQueue,&xReceivedStructure,0);
-		if(qStatus  == pdPASS)
-		{
-			if(xReceivedStructure.sSource == temp_sensor)
-			{
-				printf("Temperature sensor : %d!\n\r",xReceivedStructure.ucValue);
-			}
-
-			else
-			{
-				printf("Humidity sensor :    %d!\n\r",xReceivedStructure.ucValue);
-			}
-		}
-
-		else
-		{
-			printf("Error: could not receive...\n\r");
-		}
-		UBaseType_t freeStack = uxTaskGetStackHighWaterMark(NULL);
-
-		// Convert to bytes (Cortex-M: 4 bytes per word)
-		printf("Task free stack: %lu bytes\n\r", freeStack * sizeof(StackType_t));
-	}
-}
-
-int uart2_write(int ch)
-{
-	while(!(USART2->SR & 0x0080)){}
-	USART2->DR = (ch & 0xFF);
-	return ch;
-}
 
 int __io_putchar(int ch)
 {
-	uart2_write(ch);
+	HAL_UART_Transmit(&huart2, (uint8_t *)&ch, 1, 0xFFFF);
 	return ch;
 }
 
@@ -172,7 +72,7 @@ void SystemClock_Config(void)
   __HAL_RCC_PWR_CLK_ENABLE();
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE3);
 
-  /** Initialises the RCC Oscillators according to the specified parameters
+  /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
@@ -184,7 +84,7 @@ void SystemClock_Config(void)
     Error_Handler();
   }
 
-  /** Initialises the CPU, AHB and APB buses clocks
+  /** Initializes the CPU, AHB and APB buses clocks
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
