@@ -30,16 +30,23 @@ static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 void StartDefaultTask(void *argument);
 
+int uart2_write(int ch);
 int __io_putchar(int ch);
 
+void SenderTask(void *pvParameters);
+void ReceiverTask(void *pvParameters);
+
+void vRedLEDControlTask(void *pvParameters);
 void vGreenLEDControlTask(void *pvParameters);
 void vBlueLEDControlTask(void *pvParameters);
-void vRedLEDControlTask(void *pvParameters);
+
+
 
 typedef uint32_t TaskProfiler;
 
 TaskProfiler GreenLEDTaskProfiler, BlueLEDTaskProfiler, RedLEDTaskProfiler;
 
+SemaphoreHandle_t xBinarySemaphore;
 
 int main(void)
 {
@@ -51,23 +58,26 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
 
-  xTaskCreate(vGreenLEDControlTask,
-		      "GreenLEDControlTask",
-			  100,
+
+  xBinarySemaphore = xSemaphoreCreateBinary();
+
+	xTaskCreate(vGreenLEDControlTask,
+			  "GreenLEDControlTask",
+			  110,
 			  NULL,
 			  1,
 			  NULL);
 
-  xTaskCreate(vBlueLEDControlTask,
-		      "BlueLEDControlTask",
-			  100,
+	xTaskCreate(vBlueLEDControlTask,
+			  "GreenLEDControlTask",
+			  110,
 			  NULL,
 			  1,
 			  NULL);
 
-  xTaskCreate(vRedLEDControlTask,
-		      "RedLEDControlTask",
-			  100,
+	xTaskCreate(vRedLEDControlTask,
+			  "RedLEDControlTask",
+			  110,
 			  NULL,
 			  1,
 			  NULL);
@@ -76,38 +86,68 @@ int main(void)
 
   while (1)
   {
-	 printf("Bismillah \n\r");
+//	 printf("Bismillah \n\r");
   }
 }
 
 
 void vGreenLEDControlTask(void *pvParameters)
 {
+	xSemaphoreGive( xBinarySemaphore );
+
 	while(1)
 	{
+		xSemaphoreTake( xBinarySemaphore, portMAX_DELAY);
+
 		GreenLEDTaskProfiler++;
+		printf("Message from Green LED Controller Task...!\n\r");
+
+		xSemaphoreGive( xBinarySemaphore );
+		vTaskDelay(1);
 	}
 }
+
 
 void vBlueLEDControlTask(void *pvParameters)
 {
 	while(1)
 	{
+		xSemaphoreTake( xBinarySemaphore, portMAX_DELAY);
+
 		BlueLEDTaskProfiler++;
+		printf("Message from Blue LED Controller Task...!\n\r");
+
+
+		xSemaphoreGive( xBinarySemaphore );
+		vTaskDelay(1);
 	}
 }
+
 
 void vRedLEDControlTask(void *pvParameters)
 {
 	while(1)
 	{
+		xSemaphoreTake( xBinarySemaphore, portMAX_DELAY);
+
 		RedLEDTaskProfiler++;
+		printf("Message from Red LED Controller Task...!\n\r");
+
+		xSemaphoreGive( xBinarySemaphore );
+		vTaskDelay(1);
 	}
+}
+
+int uart2_write(int ch)
+{
+	while(!(USART2->SR & 0x0080)){}
+	USART2->DR = (ch & 0xFF);
+	return ch;
 }
 
 int __io_putchar(int ch)
 {
-	HAL_UART_Transmit(&huart2, (uint8_t *)&ch, 1, 0xFFFF);
+	uart2_write(ch);
 	return ch;
 }
 
@@ -121,7 +161,7 @@ void SystemClock_Config(void)
   __HAL_RCC_PWR_CLK_ENABLE();
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE3);
 
-  /** Initializes the RCC Oscillators according to the specified parameters
+  /** Initialises the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
@@ -133,7 +173,7 @@ void SystemClock_Config(void)
     Error_Handler();
   }
 
-  /** Initializes the CPU, AHB and APB buses clocks
+  /** Initialises the CPU, AHB and APB buses clocks
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
