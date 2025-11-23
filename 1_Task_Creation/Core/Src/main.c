@@ -21,32 +21,18 @@
 #include "cmsis_os.h"
 #include <stdio.h>
 #include "stdint.h"
-
-UART_HandleTypeDef huart2;
+#include "adc.h"
+#include "exti.h"
+#include "uart.h"
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_USART2_UART_Init(void);
 void StartDefaultTask(void *argument);
 
-int uart2_write(int ch);
-int __io_putchar(int ch);
 
-void SenderTask(void *pvParameters);
-void ReceiverTask(void *pvParameters);
-
-void vRedLEDControlTask(void *pvParameters);
-void vGreenLEDControlTask(void *pvParameters);
-void vBlueLEDControlTask(void *pvParameters);
-
-
-
-typedef uint32_t TaskProfiler;
-
-TaskProfiler GreenLEDTaskProfiler, BlueLEDTaskProfiler, RedLEDTaskProfiler;
-
-SemaphoreHandle_t xBinarySemaphore;
+uint8_t btn_state;
+uint32_t sensor_value;
 
 int main(void)
 {
@@ -56,100 +42,31 @@ int main(void)
   SystemClock_Config();
   /* Initialise all configured peripherals */
   MX_GPIO_Init();
-  MX_USART2_UART_Init();
+  MX_USART2_UART_TX_Init();
+  gpio_init();
+  adc_init();
 
-
-  xBinarySemaphore = xSemaphoreCreateBinary();
-
-	xTaskCreate(vGreenLEDControlTask,
-			  "GreenLEDControlTask",
-			  110,
-			  NULL,
-			  1,
-			  NULL);
-
-	xTaskCreate(vBlueLEDControlTask,
-			  "GreenLEDControlTask",
-			  110,
-			  NULL,
-			  1,
-			  NULL);
-
-	xTaskCreate(vRedLEDControlTask,
-			  "RedLEDControlTask",
-			  110,
-			  NULL,
-			  1,
-			  NULL);
-
-  vTaskStartScheduler();
 
   while (1)
   {
-//	 printf("Bismillah \n\r");
+	  btn_state = read_digital_sensor_data();
+	  sensor_value = read_analog_sensor();
   }
 }
 
 
-void vGreenLEDControlTask(void *pvParameters)
-{
-	xSemaphoreGive( xBinarySemaphore );
-
-	while(1)
-	{
-		xSemaphoreTake( xBinarySemaphore, portMAX_DELAY);
-
-		GreenLEDTaskProfiler++;
-		printf("Message from Green LED Controller Task...!\n\r");
-
-		xSemaphoreGive( xBinarySemaphore );
-		vTaskDelay(1);
-	}
-}
-
-
-void vBlueLEDControlTask(void *pvParameters)
-{
-	while(1)
-	{
-		xSemaphoreTake( xBinarySemaphore, portMAX_DELAY);
-
-		BlueLEDTaskProfiler++;
-		printf("Message from Blue LED Controller Task...!\n\r");
-
-
-		xSemaphoreGive( xBinarySemaphore );
-		vTaskDelay(1);
-	}
-}
-
-
-void vRedLEDControlTask(void *pvParameters)
-{
-	while(1)
-	{
-		xSemaphoreTake( xBinarySemaphore, portMAX_DELAY);
-
-		RedLEDTaskProfiler++;
-		printf("Message from Red LED Controller Task...!\n\r");
-
-		xSemaphoreGive( xBinarySemaphore );
-		vTaskDelay(1);
-	}
-}
-
-int uart2_write(int ch)
-{
-	while(!(USART2->SR & 0x0080)){}
-	USART2->DR = (ch & 0xFF);
-	return ch;
-}
-
-int __io_putchar(int ch)
-{
-	uart2_write(ch);
-	return ch;
-}
+//int uart2_write(int ch)
+//{
+//	while(!(USART2->SR & 0x0080)){}
+//	USART2->DR = (ch & 0xFF);
+//	return ch;
+//}
+//
+//int __io_putchar(int ch)
+//{
+//	uart2_write(ch);
+//	return ch;
+//}
 
 void SystemClock_Config(void)
 {
@@ -193,33 +110,6 @@ void SystemClock_Config(void)
   * @param None
   * @retval None
   */
-static void MX_USART2_UART_Init(void)
-{
-
-  /* USER CODE BEGIN USART2_Init 0 */
-
-  /* USER CODE END USART2_Init 0 */
-
-  /* USER CODE BEGIN USART2_Init 1 */
-
-  /* USER CODE END USART2_Init 1 */
-  huart2.Instance = USART2;
-  huart2.Init.BaudRate = 115200;
-  huart2.Init.WordLength = UART_WORDLENGTH_8B;
-  huart2.Init.StopBits = UART_STOPBITS_1;
-  huart2.Init.Parity = UART_PARITY_NONE;
-  huart2.Init.Mode = UART_MODE_TX_RX;
-  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
-  if (HAL_UART_Init(&huart2) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN USART2_Init 2 */
-
-  /* USER CODE END USART2_Init 2 */
-
-}
 
 /**
   * @brief GPIO Initialization Function
@@ -271,20 +161,3 @@ void Error_Handler(void)
   }
   /* USER CODE END Error_Handler_Debug */
 }
-
-#ifdef  USE_FULL_ASSERT
-/**
-  * @brief  Reports the name of the source file and the source line number
-  *         where the assert_param error has occurred.
-  * @param  file: pointer to the source file name
-  * @param  line: assert_param error line source number
-  * @retval None
-  */
-void assert_failed(uint8_t *file, uint32_t line)
-{
-  /* USER CODE BEGIN 6 */
-  /* User can add his own implementation to report the file name and line number,
-     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
-  /* USER CODE END 6 */
-}
-#endif /* USE_FULL_ASSERT */
