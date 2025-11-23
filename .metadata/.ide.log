@@ -940,3 +940,49 @@
 2025-11-01 15:48:06,651 [INFO] ProjectBuilder:2790 - Time for Copy CMSIS : 0mS.
 2025-11-01 15:48:06,655 [INFO] ProjectBuilder:2790 - Time for Copy CMSIS : 0mS.
 2025-11-02 09:53:23,335 [ERROR] LogOutputStream:74 - [STDERR_REDIRECT] 
+<<<<<<< HEAD
+=======
+2025-11-02 09:57:36,418 [INFO] Activator:177 - 
+
+
+2025-11-02 09:57:36,419 [INFO] Activator:178 - !SESSION log4j initialized
+2025-11-02 09:58:06,232 [ERROR] LogOutputStream:74 - [STDERR_REDIRECT] SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
+2025-11-02 09:58:06,232 [ERROR] LogOutputStream:74 - [STDERR_REDIRECT] SLF4J: Defaulting to no-operation (NOP) logger implementation
+2025-11-02 09:58:06,234 [ERROR] LogOutputStream:74 - [STDERR_REDIRECT] SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
+2025-11-15 13:34:25,511 [INFO] Activator:177 - 
+
+
+2025-11-15 13:34:25,513 [INFO] Activator:178 - !SESSION log4j initialized
+2025-11-15 13:34:58,009 [ERROR] LogOutputStream:74 - [STDERR_REDIRECT] SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
+2025-11-15 13:34:58,010 [ERROR] LogOutputStream:74 - [STDERR_REDIRECT] SLF4J: Defaulting to no-operation (NOP) logger implementation
+2025-11-15 13:34:58,011 [ERROR] LogOutputStream:74 - [STDERR_REDIRECT] SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
+2025-11-15 13:57:55,640 [ERROR] ConfigurationRetriever:139 - IOException on connection: connect timed out
+2025-11-17 15:23:12,473 [INFO] Activator:177 - 
+
+
+2025-11-17 15:23:12,475 [INFO] Activator:178 - !SESSION log4j initialized
+2025-11-17 15:23:41,712 [ERROR] LogOutputStream:74 - [STDERR_REDIRECT] SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
+2025-11-17 15:23:41,713 [ERROR] LogOutputStream:74 - [STDERR_REDIRECT] SLF4J: Defaulting to no-operation (NOP) logger implementation
+2025-11-17 15:23:41,715 [ERROR] LogOutputStream:74 - [STDERR_REDIRECT] SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
+2025-11-17 15:24:23,056 [INFO] Activator:177 - 
+
+
+2025-11-17 15:24:23,058 [INFO] Activator:178 - !SESSION log4j initialized
+2025-11-17 15:24:48,759 [ERROR] LogOutputStream:74 - [STDERR_REDIRECT] SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
+2025-11-17 15:24:48,761 [ERROR] LogOutputStream:74 - [STDERR_REDIRECT] SLF4J: Defaulting to no-operation (NOP) logger implementation
+2025-11-17 15:24:48,763 [ERROR] LogOutputStream:74 - [STDERR_REDIRECT] SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
+2025-11-18 13:40:30,987 [INFO] Activator:177 - 
+
+
+2025-11-18 13:40:30,988 [INFO] Activator:178 - !SESSION log4j initialized
+2025-11-18 13:41:02,487 [ERROR] LogOutputStream:74 - [STDERR_REDIRECT] SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
+2025-11-18 13:41:02,487 [ERROR] LogOutputStream:74 - [STDERR_REDIRECT] SLF4J: Defaulting to no-operation (NOP) logger implementation
+2025-11-18 13:41:02,488 [ERROR] LogOutputStream:74 - [STDERR_REDIRECT] SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
+2025-11-22 17:56:18,411 [INFO] Activator:177 - 
+
+
+2025-11-22 17:56:18,412 [INFO] Activator:178 - !SESSION log4j initialized
+2025-11-22 17:56:55,195 [ERROR] LogOutputStream:74 - [STDERR_REDIRECT] SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
+2025-11-22 17:56:55,196 [ERROR] LogOutputStream:74 - [STDERR_REDIRECT] SLF4J: Defaulting to no-operation (NOP) logger implementation
+2025-11-22 17:56:55,198 [ERROR] LogOutputStream:74 - [STDERR_REDIRECT] SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
+>>>>>>> 8d27757 (Drivers: uart2, ADC, EXTI - PA1(sensor)/PC13(Button B1))
