@@ -1,21 +1,3 @@
-/* USER CODE BEGIN Header */
-/**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2025 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
-/* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
@@ -31,8 +13,15 @@ static void MX_GPIO_Init(void);
 void StartDefaultTask(void *argument);
 
 
+
 uint8_t btn_state;
 uint32_t sensor_value;
+
+SemaphoreHandle_t xMutexSemaphore;
+
+
+void vReadSensorTask(void *pvParameters);
+void vReadButtonTask(void *pvParameters);
 
 int main(void)
 {
@@ -43,30 +32,66 @@ int main(void)
   /* Initialise all configured peripherals */
   MX_GPIO_Init();
   MX_USART2_UART_TX_Init();
-  gpio_init();
-  adc_init();
 
+  printf("Board initializing...!\n\r");
+
+  xMutexSemaphore = xSemaphoreCreateMutex();
+
+  xTaskCreate(vReadButtonTask,
+  			  "ReadButton",
+  			  120,
+  			  NULL,
+  			  2,
+  			  NULL);
+
+  xTaskCreate(vReadSensorTask,
+  			  "ReadSensor",
+  			  120,
+  			  NULL,
+  			  1,
+  			  NULL);
+
+  vTaskStartScheduler();
 
   while (1)
   {
-	  btn_state = read_digital_sensor_data();
-	  sensor_value = read_analog_sensor();
   }
 }
 
+void vReadButtonTask(void *pvParameters)
+{
+	 gpio_init();
+	 while(1)
+	{
+	    btn_state = read_digital_sensor_data();
 
-//int uart2_write(int ch)
-//{
-//	while(!(USART2->SR & 0x0080)){}
-//	USART2->DR = (ch & 0xFF);
-//	return ch;
-//}
-//
-//int __io_putchar(int ch)
-//{
-//	uart2_write(ch);
-//	return ch;
-//}
+
+	    if( xSemaphoreTake( xMutexSemaphore, ( TickType_t ) 10 ) == pdTRUE )
+	   {
+	    	printf("Button State Value %d: \n\r", btn_state);
+		    xSemaphoreGive( xMutexSemaphore );
+	   }
+	    vTaskDelay(1);
+	}
+}
+
+void vReadSensorTask(void *pvParameters)
+{
+	adc_init();
+	while(1)
+	{
+		sensor_value = read_analog_sensor();
+
+		if (xSemaphoreTake( xMutexSemaphore, ( TickType_t ) 5 ) == pdTRUE)
+		{
+			printf("Sensor Value %ld: \n\r", sensor_value);
+			xSemaphoreGive( xMutexSemaphore );
+		}
+
+		vTaskDelay(1);
+	}
+}
+
 
 void SystemClock_Config(void)
 {
