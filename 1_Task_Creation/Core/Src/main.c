@@ -17,11 +17,12 @@ void StartDefaultTask(void *argument);
 uint8_t btn_state;
 uint32_t sensor_value;
 
-SemaphoreHandle_t xMutexSemaphore;
+SemaphoreHandle_t xCountSemaphore;
 
 
 void vReadSensorTask(void *pvParameters);
 void vReadButtonTask(void *pvParameters);
+void vNotAllowedForResourceTask(void *pvParameters);
 
 int main(void)
 {
@@ -35,13 +36,15 @@ int main(void)
 
   printf("Board initializing...!\n\r");
 
-  xMutexSemaphore = xSemaphoreCreateMutex();
+  /* in case of more resource (3, give it to first task by seting = 1)*/
+  /* currently using only one resource */
+  xCountSemaphore = xSemaphoreCreateCounting(1,0);
 
   xTaskCreate(vReadButtonTask,
   			  "ReadButton",
   			  120,
   			  NULL,
-  			  2,
+  			  1,
   			  NULL);
 
   xTaskCreate(vReadSensorTask,
@@ -50,6 +53,9 @@ int main(void)
   			  NULL,
   			  1,
   			  NULL);
+
+  /* must give the same as in binary to proceed the semaphore*/
+  xSemaphoreGive( xCountSemaphore );
 
   vTaskStartScheduler();
 
@@ -66,10 +72,11 @@ void vReadButtonTask(void *pvParameters)
 	    btn_state = read_digital_sensor_data();
 
 
-	    if( xSemaphoreTake( xMutexSemaphore, ( TickType_t ) 10 ) == pdTRUE )
+	    if( xSemaphoreTake( xCountSemaphore, ( TickType_t ) 10 ) == pdTRUE )
 	   {
-	    	printf("Button State Value %d: \n\r", btn_state);
-		    xSemaphoreGive( xMutexSemaphore );
+	    	printf("Button State Value: %d............\n\r", btn_state);
+
+		    xSemaphoreGive( xCountSemaphore );
 	   }
 	    vTaskDelay(1);
 	}
@@ -82,10 +89,10 @@ void vReadSensorTask(void *pvParameters)
 	{
 		sensor_value = read_analog_sensor();
 
-		if (xSemaphoreTake( xMutexSemaphore, ( TickType_t ) 5 ) == pdTRUE)
+		if (xSemaphoreTake( xCountSemaphore, ( TickType_t ) 5 ) == pdTRUE)
 		{
-			printf("Sensor Value %ld: \n\r", sensor_value);
-			xSemaphoreGive( xMutexSemaphore );
+			printf("Sensor Value:       %ld...........\n\r", sensor_value);
+			xSemaphoreGive( xCountSemaphore );
 		}
 
 		vTaskDelay(1);
