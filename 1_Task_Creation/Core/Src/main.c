@@ -17,12 +17,11 @@ void StartDefaultTask(void *argument);
 uint8_t btn_state;
 uint32_t sensor_value;
 
-SemaphoreHandle_t xCountSemaphore;
-
+QueueHandle_t xPrintQueue;
 
 void vReadSensorTask(void *pvParameters);
 void vReadButtonTask(void *pvParameters);
-void vNotAllowedForResourceTask(void *pvParameters);
+void vGatekeeperTask(void *pvParameters);
 
 int main(void)
 {
@@ -36,9 +35,7 @@ int main(void)
 
   printf("Board initializing...!\n\r");
 
-  /* in case of more resource (3, give it to first task by seting = 1)*/
-  /* currently using only one resource */
-  xCountSemaphore = xSemaphoreCreateCounting(1,0);
+
 
   xTaskCreate(vReadButtonTask,
   			  "ReadButton",
@@ -54,8 +51,14 @@ int main(void)
   			  1,
   			  NULL);
 
-  /* must give the same as in binary to proceed the semaphore*/
-  xSemaphoreGive( xCountSemaphore );
+  xTaskCreate(vGatekeeperTask,
+  			  "Gatekeeper",
+  			  120,
+  			  NULL,
+  			  0,
+  			  NULL);
+
+  xPrintQueue = xQueueCreate(2,sizeof(int32_t));
 
   vTaskStartScheduler();
 
@@ -70,14 +73,7 @@ void vReadButtonTask(void *pvParameters)
 	 while(1)
 	{
 	    btn_state = read_digital_sensor_data();
-
-
-	    if( xSemaphoreTake( xCountSemaphore, ( TickType_t ) 10 ) == pdTRUE )
-	   {
-	    	printf("Button State Value: %d............\n\r", btn_state);
-
-		    xSemaphoreGive( xCountSemaphore );
-	   }
+	    xQueueSendToBack( xPrintQueue, &btn_state, 0);
 	    vTaskDelay(1);
 	}
 }
@@ -88,17 +84,25 @@ void vReadSensorTask(void *pvParameters)
 	while(1)
 	{
 		sensor_value = read_analog_sensor();
-
-		if (xSemaphoreTake( xCountSemaphore, ( TickType_t ) 5 ) == pdTRUE)
-		{
-			printf("Sensor Value:       %ld...........\n\r", sensor_value);
-			xSemaphoreGive( xCountSemaphore );
-		}
-
+		xQueueSendToBack( xPrintQueue, &sensor_value, ( TickType_t ) 1);
 		vTaskDelay(1);
 	}
 }
 
+/* This one task owns the Resource (UART) and act as a gatekeeper
+ * all other task comes put the data in the queue and this takes it
+ * use case: when want a task to own the resource and others just send request
+ * but Semaphores allows tasks them selves to interact with the resource but mutual exclusion*/
+int ValuetoPrint;
+void vGatekeeperTask(void *pvParameters)
+{
+	while(1)
+	{
+		xQueueReceive( xPrintQueue, &ValuetoPrint, portMAX_DELAY);
+		printf("New value received %d \n\r", ValuetoPrint);
+	}
+
+}
 
 void SystemClock_Config(void)
 {
