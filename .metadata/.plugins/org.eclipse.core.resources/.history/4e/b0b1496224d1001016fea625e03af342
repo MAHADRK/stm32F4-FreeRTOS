@@ -61,22 +61,12 @@ void prvOneShotTimerCallback(TimerHandle_t xTimer)
 	printf("Current Tick count of One shot Timer: %d \n\r", (int)xTimeNow);
 }
 
-uint timeout_count = 0;
-const uint STOP_MASK = 10;
 
 void prvAutoRealoadTimerCallback(TimerHandle_t xTimer)
 {
 	static TickType_t xTimeNow;
 	xTimeNow = xTaskGetTickCount();
 	printf("Current Tick count of AutoReaload Timer: %d \n\r", (int)xTimeNow);
-	timeout_count++;
-
-	if (timeout_count == STOP_MASK)
-	{
-		printf("STOP MASK reached %d \n\r", (int)xTimeNow);
-		xTimerStop(xAutoReloadTimer, 0);
-	}
-
 
 }
 
