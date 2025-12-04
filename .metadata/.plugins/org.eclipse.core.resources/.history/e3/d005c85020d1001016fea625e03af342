@@ -1,73 +1,71 @@
-/* USER CODE BEGIN Header */
-/**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2025 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
-/* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
 #include <stdio.h>
 #include "stdint.h"
-
-UART_HandleTypeDef huart2;
+#include "adc.h"
+#include "exti.h"
+#include "uart.h"
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_USART2_UART_Init(void);
 void StartDefaultTask(void *argument);
 
-int __io_putchar(int ch);
+void prvOneShotTimerCallback(TimerHandle_t xTimer);
+void prvAutoRealoadTimerCallback(TimerHandle_t xTimer);
+
+#define mainONE_SHOT_TIMER_PERIOD (pdMS_TO_TICKS(3000UL))
+#define mainAUTO_RELOAD_TIMER_PERIOD (pdMS_TO_TICKS(500UL))
+
+TimerHandle_t xOneShotTimer, xAutoReloadTimer;
+BaseType_t xTimer1Started, xTimer2Started;
 
 int main(void)
 {
 
   HAL_Init();
-
-
   /* Configure the system clock */
   SystemClock_Config();
 
-
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_USART2_UART_Init();
+  MX_USART2_UART_TX_Init();
+
+  xOneShotTimer = xTimerCreate("One Shot Timer",
+								mainONE_SHOT_TIMER_PERIOD,
+								pdFALSE,
+								0,
+								prvOneShotTimerCallback );
+
+  mainAUTO_RELOAD_TIMER_PERIOD = xTimerCreate("One Shot Timer",
+												mainAUTO_RELOAD_TIMER_PERIOD,
+												pdTRUE,
+												0,
+												prvAutoRealoadTimerCallback );
+
+  xTimer1Started =   xTimerStart( xOneShotTimer , 0 );
+  xTimer2Started =  xTimerStart( xAutoReloadTimer , 0 );
 
   while (1)
   {
-	 printf("Bismillah \n\r");
   }
 }
 
-
-void vGreenLEDControllerTask()
+void prvOneShotTimerCallback(TimerHandle_t xTimer)
 {
-	while(1)
-	{
-		printf("L")
-	}
+	static TickType_t xTimeNow;
+	xTimeNow = xTaskGetTickCount();
+	printf("Current Tick count of One shot Timer: %d \n\r", (int)xTimeNow);
 }
 
-
-
-int __io_putchar(int ch)
+void prvAutoRealoadTimerCallback(TimerHandle_t xTimer)
 {
-	HAL_UART_Transmit(&huart2, (uint8_t *)&ch, 1, 0xFFFF);
-	return ch;
+	static TickType_t xTimeNow;
+	xTimeNow = xTaskGetTickCount();
+	printf("Current Tick count of One shot Timer: %d \n\r", (int)xTimeNow);
 }
+
 
 void SystemClock_Config(void)
 {
@@ -111,33 +109,6 @@ void SystemClock_Config(void)
   * @param None
   * @retval None
   */
-static void MX_USART2_UART_Init(void)
-{
-
-  /* USER CODE BEGIN USART2_Init 0 */
-
-  /* USER CODE END USART2_Init 0 */
-
-  /* USER CODE BEGIN USART2_Init 1 */
-
-  /* USER CODE END USART2_Init 1 */
-  huart2.Instance = USART2;
-  huart2.Init.BaudRate = 115200;
-  huart2.Init.WordLength = UART_WORDLENGTH_8B;
-  huart2.Init.StopBits = UART_STOPBITS_1;
-  huart2.Init.Parity = UART_PARITY_NONE;
-  huart2.Init.Mode = UART_MODE_TX_RX;
-  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
-  if (HAL_UART_Init(&huart2) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN USART2_Init 2 */
-
-  /* USER CODE END USART2_Init 2 */
-
-}
 
 /**
   * @brief GPIO Initialization Function
@@ -189,20 +160,3 @@ void Error_Handler(void)
   }
   /* USER CODE END Error_Handler_Debug */
 }
-
-#ifdef  USE_FULL_ASSERT
-/**
-  * @brief  Reports the name of the source file and the source line number
-  *         where the assert_param error has occurred.
-  * @param  file: pointer to the source file name
-  * @param  line: assert_param error line source number
-  * @retval None
-  */
-void assert_failed(uint8_t *file, uint32_t line)
-{
-  /* USER CODE BEGIN 6 */
-  /* User can add his own implementation to report the file name and line number,
-     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
-  /* USER CODE END 6 */
-}
-#endif /* USE_FULL_ASSERT */

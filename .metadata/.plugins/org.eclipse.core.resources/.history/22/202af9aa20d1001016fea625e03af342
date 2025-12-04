@@ -15,7 +15,7 @@ void StartDefaultTask(void *argument);
 void prvOneShotTimerCallback(TimerHandle_t xTimer);
 void prvAutoRealoadTimerCallback(TimerHandle_t xTimer);
 
-#define mainONE_SHOT_TIMER_PERIOD (pdMS_TO_TICKS(4000UL))
+#define mainONE_SHOT_TIMER_PERIOD (pdMS_TO_TICKS(3000UL))
 #define mainAUTO_RELOAD_TIMER_PERIOD (pdMS_TO_TICKS(500UL))
 
 TimerHandle_t xOneShotTimer, xAutoReloadTimer;
@@ -38,7 +38,7 @@ int main(void)
 								0,
 								prvOneShotTimerCallback );
 
-  xAutoReloadTimer = xTimerCreate("Auto Reload Timer",
+  xAutoReloadTimer = xTimerCreate("One Shot Timer",
 												mainAUTO_RELOAD_TIMER_PERIOD,
 												pdTRUE,
 												0,
@@ -46,8 +46,6 @@ int main(void)
 
   xTimer1Started =   xTimerStart( xOneShotTimer , 0 );
   xTimer2Started =  xTimerStart( xAutoReloadTimer , 0 );
-
-  vTaskStartScheduler();
 
   while (1)
   {
@@ -61,13 +59,11 @@ void prvOneShotTimerCallback(TimerHandle_t xTimer)
 	printf("Current Tick count of One shot Timer: %d \n\r", (int)xTimeNow);
 }
 
-
 void prvAutoRealoadTimerCallback(TimerHandle_t xTimer)
 {
 	static TickType_t xTimeNow;
 	xTimeNow = xTaskGetTickCount();
-	printf("Current Tick count of AutoReaload Timer: %d \n\r", (int)xTimeNow);
-
+	printf("Current Tick count of One shot Timer: %d \n\r", (int)xTimeNow);
 }
 
 

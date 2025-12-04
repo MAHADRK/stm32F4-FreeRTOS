@@ -64,8 +64,8 @@ all: main-build
 main-build: 1_Task_Creation.elf secondary-outputs
 
 # Tool invocations
-1_Task_Creation.elf 1_Task_Creation.map: $(OBJS) $(USER_OBJS) E:\ESD\ courses\stm32F4-freeRTOS\1_Task_Creation\STM32F446RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "1_Task_Creation.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"E:\ESD courses\stm32F4-freeRTOS\1_Task_Creation\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="1_Task_Creation.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+1_Task_Creation.elf 1_Task_Creation.map: $(OBJS) $(USER_OBJS) E:\ESD\ courses\stm32F4-FreeRTOS\1_Task_Creation\STM32F446RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "1_Task_Creation.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"E:\ESD courses\stm32F4-FreeRTOS\1_Task_Creation\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="1_Task_Creation.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

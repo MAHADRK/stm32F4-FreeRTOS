@@ -986,3 +986,7 @@
 2025-11-22 17:56:55,196 [ERROR] LogOutputStream:74 - [STDERR_REDIRECT] SLF4J: Defaulting to no-operation (NOP) logger implementation
 2025-11-22 17:56:55,198 [ERROR] LogOutputStream:74 - [STDERR_REDIRECT] SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
 >>>>>>> 8d27757 (Drivers: uart2, ADC, EXTI - PA1(sensor)/PC13(Button B1))
+2025-12-04 15:13:46,380 [INFO] Activator:177 - 
+
+
+2025-12-04 15:13:46,383 [INFO] Activator:178 - !SESSION log4j initialized
