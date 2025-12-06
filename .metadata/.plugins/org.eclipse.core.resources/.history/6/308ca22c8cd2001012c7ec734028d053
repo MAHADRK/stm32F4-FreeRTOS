@@ -12,10 +12,12 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 void StartDefaultTask(void *argument);
 
+void PolledUartReceive(void *pvParameters);
 void HandlerTask(void *pvParameters);
-void Start_rx_interrupt(void);
+
 
 QueueHandle_t Uart2_ByteRecieve;
+
 
 int main(void)
 {
@@ -26,15 +28,22 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
 
+  Uart2_ByteRecieve = xQueueCreate(10, sizeof(char));
+
+  xTaskCreate(PolledUartReceive,
+		      "Poll Uart2",
+			  100,
+			  NULL,
+			  1,
+			  NULL);
 
   xTaskCreate(HandlerTask,
 		      "Handle Uart_rx",
 			  100,
 			  NULL,
-			  tskIDLE_PRIORITY + 3,
+			  1,
 			  NULL);
 
-  Uart2_ByteRecieve = xQueueCreate(10, sizeof(char));
 
   vTaskStartScheduler();
 
@@ -43,46 +52,26 @@ int main(void)
   }
 }
 
+char rcvByte;
 
-void Start_rx_interrupt(void)
+void PolledUartReceive(void *pvParameters)
 {
-
-	/*Interrupt Enable*/
-	USART2->CR1 |= (1U<<5);
-
-	NVIC_SetPriority(USART2_IRQn,6);
-
-	/*Enable UART2 interrupt in NVIC*/
-	NVIC_EnableIRQ(USART2_IRQn);
-}
-
-void USART2_IRQHandler(void)
-{
-	BaseType_t pxHigherPriorityTaskWoken = pdFALSE;
-
-	if (USART2->SR & 0x0020)
-	{
-		uint8_t temp_data;
-		temp_data = USART2->DR;
-
-		xQueueSendFromISR(Uart2_ByteRecieve, &temp_data, &pxHigherPriorityTaskWoken);
-
-	}
-
-
-	portYIELD_FROM_ISR(pxHigherPriorityTaskWoken);
-
+	 MX_USART2_UART_RX_Init();
+	 while(1)
+	 {
+		 rcvByte = uart2_read();
+		 xQueueSend(Uart2_ByteRecieve, &rcvByte,0);
+	 }
 }
 
 char buffer;
+
+
 void HandlerTask(void *pvParameters)
 {
-	MX_USART2_UART_RX_Init();
-	Start_rx_interrupt();
-
 	while(1)
 	{
-		xQueueReceive(Uart2_ByteRecieve,&buffer, portMAX_DELAY);
+		xQueueReceive(Uart2_ByteRecieve,&buffer, 0);
 	}
 }
 

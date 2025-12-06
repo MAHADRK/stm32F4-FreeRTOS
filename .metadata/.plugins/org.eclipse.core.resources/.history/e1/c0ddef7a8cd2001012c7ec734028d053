@@ -13,7 +13,6 @@ static void MX_GPIO_Init(void);
 void StartDefaultTask(void *argument);
 
 void HandlerTask(void *pvParameters);
-void Start_rx_interrupt(void);
 
 QueueHandle_t Uart2_ByteRecieve;
 
@@ -31,7 +30,7 @@ int main(void)
 		      "Handle Uart_rx",
 			  100,
 			  NULL,
-			  tskIDLE_PRIORITY + 3,
+			  1,
 			  NULL);
 
   Uart2_ByteRecieve = xQueueCreate(10, sizeof(char));
@@ -65,7 +64,7 @@ void USART2_IRQHandler(void)
 		uint8_t temp_data;
 		temp_data = USART2->DR;
 
-		xQueueSendFromISR(Uart2_ByteRecieve, &temp_data, &pxHigherPriorityTaskWoken);
+		xQueueTakeFromISR(Uart2_ByteRecieve, &temp_data, &pxHigherPriorityTaskWoken);
 
 	}
 
@@ -82,7 +81,7 @@ void HandlerTask(void *pvParameters)
 
 	while(1)
 	{
-		xQueueReceive(Uart2_ByteRecieve,&buffer, portMAX_DELAY);
+		xQueueReceive(Uart2_ByteRecieve,&buffer, 0);
 	}
 }
 

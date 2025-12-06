@@ -13,7 +13,6 @@ static void MX_GPIO_Init(void);
 void StartDefaultTask(void *argument);
 
 void HandlerTask(void *pvParameters);
-void Start_rx_interrupt(void);
 
 QueueHandle_t Uart2_ByteRecieve;
 
@@ -31,7 +30,7 @@ int main(void)
 		      "Handle Uart_rx",
 			  100,
 			  NULL,
-			  tskIDLE_PRIORITY + 3,
+			  taskIDLE_PRIORITY + 3,
 			  NULL);
 
   Uart2_ByteRecieve = xQueueCreate(10, sizeof(char));
