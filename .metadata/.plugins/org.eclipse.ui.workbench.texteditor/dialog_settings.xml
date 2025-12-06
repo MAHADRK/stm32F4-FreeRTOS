@@ -8,6 +8,7 @@
 		<item key="incremental" value="false"/>
 		<item key="isRegEx" value="false"/>
 		<list key="findhistory">
+			<item value="one"/>
 			<item value="uart2_write"/>
 			<item value="defualt"/>
 			<item value="def"/>

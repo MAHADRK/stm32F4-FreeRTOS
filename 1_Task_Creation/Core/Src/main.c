@@ -1,21 +1,3 @@
-/* USER CODE BEGIN Header */
-/**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2025 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
-/* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
@@ -30,69 +12,68 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 void StartDefaultTask(void *argument);
 
-<<<<<<< HEAD
-int __io_putchar(int ch);
+void PolledUartReceive(void *pvParameters);
+void HandlerTask(void *pvParameters);
 
-=======
 
-uint8_t btn_state;
-uint32_t sensor_value;
+QueueHandle_t Uart2_ByteRecieve;
 
->>>>>>> 8d27757 (Drivers: uart2, ADC, EXTI - PA1(sensor)/PC13(Button B1))
+
 int main(void)
 {
 
   HAL_Init();
-
-
   /* Configure the system clock */
   SystemClock_Config();
-
-
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_USART2_UART_TX_Init();
-  gpio_init();
-  adc_init();
 
-<<<<<<< HEAD
+  Uart2_ByteRecieve = xQueueCreate(10, sizeof(char));
+
+  xTaskCreate(PolledUartReceive,
+		      "Poll Uart2",
+			  100,
+			  NULL,
+			  1,
+			  NULL);
+
+  xTaskCreate(HandlerTask,
+		      "Handle Uart_rx",
+			  100,
+			  NULL,
+			  1,
+			  NULL);
+
+
+  vTaskStartScheduler();
+
   while (1)
   {
-	 printf("Bismillah \n\r");
-=======
-
-  while (1)
-  {
-	  btn_state = read_digital_sensor_data();
-	  sensor_value = read_analog_sensor();
->>>>>>> 8d27757 (Drivers: uart2, ADC, EXTI - PA1(sensor)/PC13(Button B1))
   }
 }
 
+char rcvByte;
 
-<<<<<<< HEAD
-
-
-
-int __io_putchar(int ch)
+void PolledUartReceive(void *pvParameters)
 {
-	HAL_UART_Transmit(&huart2, (uint8_t *)&ch, 1, 0xFFFF);
-	return ch;
+	 MX_USART2_UART_RX_Init();
+	 while(1)
+	 {
+		 rcvByte = uart2_read();
+		 xQueueSend(Uart2_ByteRecieve, &rcvByte,0);
+	 }
 }
-=======
-//int uart2_write(int ch)
-//{
-//	while(!(USART2->SR & 0x0080)){}
-//	USART2->DR = (ch & 0xFF);
-//	return ch;
-//}
-//
-//int __io_putchar(int ch)
-//{
-//	uart2_write(ch);
-//	return ch;
-//}
->>>>>>> 8d27757 (Drivers: uart2, ADC, EXTI - PA1(sensor)/PC13(Button B1))
+
+char buffer;
+
+
+void HandlerTask(void *pvParameters)
+{
+	while(1)
+	{
+		xQueueReceive(Uart2_ByteRecieve,&buffer, 0);
+	}
+}
 
 void SystemClock_Config(void)
 {

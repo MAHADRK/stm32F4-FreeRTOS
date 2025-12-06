@@ -6,7 +6,7 @@
 
 void MX_USART2_UART_TX_Init(void);void MX_USART2_UART_RX_Init(void);
 int __io_putchar(int ch);
-
+int uart2_read();
 
 
 #endif /* INC_UART_H_ */

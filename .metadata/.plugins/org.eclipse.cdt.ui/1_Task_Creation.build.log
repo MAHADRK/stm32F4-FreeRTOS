@@ -1,22 +1,10 @@
-<<<<<<< HEAD
-09:04:23 **** Incremental Build of configuration Debug for project 1_Task_Creation ****
+10:38:32 **** Incremental Build of configuration Debug for project 1_Task_Creation ****
 make -j8 all 
 arm-none-eabi-size   1_Task_Creation.elf 
    text	   data	    bss	    dec	    hex	filename
-  15696	    120	   2896	  18712	   4918	1_Task_Creation.elf
+  20240	     24	  20480	  40744	   9f28	1_Task_Creation.elf
 Finished building: default.size.stdout
  
 
-09:04:23 Build Finished. 0 errors, 0 warnings. (took 318ms)
-=======
-15:06:11 **** Incremental Build of configuration Debug for project 1_Task_Creation ****
-make -j8 all 
-arm-none-eabi-size   1_Task_Creation.elf 
-   text	   data	    bss	    dec	    hex	filename
-  10880	     20	   2884	  13784	   35d8	1_Task_Creation.elf
-Finished building: default.size.stdout
- 
-
-15:06:11 Build Finished. 0 errors, 0 warnings. (took 238ms)
->>>>>>> 8d27757 (Drivers: uart2, ADC, EXTI - PA1(sensor)/PC13(Button B1))
+10:38:32 Build Finished. 0 errors, 0 warnings. (took 389ms)
 

@@ -37,6 +37,14 @@ void MX_USART2_UART_RX_Init(void)
   }
 }
 
+int uart2_read(void)
+{
+	char ch;
+	while(!(USART2->SR & 0x0020)){}
+	ch = USART2->DR;
+	return ch;
+}
+
 int uart2_write(int ch)
 {
 	while(!(USART2->SR & 0x0080)){}
